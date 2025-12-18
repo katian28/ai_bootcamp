@@ -93,13 +93,14 @@ try:
             with col2:
                 st.button("Shorten", key=f"btn_shorten_{selected_id}")
             with col3:
+                st.button("Change Tone", key=f"btn_change_tone_{selected_id}")
                 tone_choice = st.selectbox(
                     "Tone",
                     options=["friendly", "sympathetic", "professional"],
                     index=0,
                     key=f"tone_select_{selected_id}",
                 )
-                st.button("Change Tone", key=f"btn_change_tone_{selected_id}")
+                
 
             with st.expander("Columns"):
                 st.write(list(df.columns))
