@@ -18,8 +18,17 @@ class GenerateEmail():
         self.deployment_name = model
 
     def _call_api(self, messages):
-        # TODO: implement this function to call ChatCompletions
-        pass
+        """Call OpenAI ChatCompletions API and return the response text."""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.deployment_name,
+                messages=messages,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"API Error: {e}")
+            return None
+        
     
     def get_prompt(self, prompt_name, prompt_type='user', **kwargs):
         template = prompts[prompt_name][prompt_type]
@@ -32,16 +41,38 @@ class GenerateEmail():
         ]
         return self._call_api(messages)
     
-    def generate(self, action: str) -> list:
-        # TODO: implement your backend logic with this method. Skeleton code is provided below.
-
+    def generate(self, action: str, email_content: str, tone: str = None) -> str:
+        """Generate email modifications based on action.
+        
+        Args:
+            action: 'shorten', 'lengthen', or 'tone'
+            email_content: The email text to modify
+            tone: Tone option for 'tone' action ('friendly', 'sympathetic', 'professional')
+        
+        Returns:
+            Modified email text or None if API fails
+        """
+        args = {"selected_text": email_content}
+        
         if action == "shorten":
-            args = {
-                "selected_text": "Hello World!"
-            }
             system_prompt = self.get_prompt('shorten', prompt_type='system', **args)
             user_prompt = self.get_prompt('shorten', **args)
-            print("system prompt:", system_prompt)
-            print("user prompt:", user_prompt)
             model_response = self.send_prompt(user_prompt, system_prompt)
             return model_response
+        
+        elif action == "lengthen":
+            system_prompt = self.get_prompt('lengthen', prompt_type='system', **args)
+            user_prompt = self.get_prompt('lengthen', **args)
+            model_response = self.send_prompt(user_prompt, system_prompt)
+            return model_response
+        
+        elif action == "tone":
+            args["tone"] = tone
+            system_prompt = self.get_prompt('tone', prompt_type='system', **args)
+            user_prompt = self.get_prompt('tone', **args)
+            model_response = self.send_prompt(user_prompt, system_prompt)
+            return model_response
+        
+        else:
+            print(f"Unknown action: {action}")
+            return None

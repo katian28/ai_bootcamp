@@ -3,6 +3,7 @@ import os
 import json
 import pandas as pd
 import requests
+from generate import GenerateEmail
 
 # --- CONFIG ---
 st.set_page_config(page_title="AI Email Editor", page_icon="📧", layout="wide")
@@ -57,7 +58,18 @@ try:
             id_col = "_id"
 
         email_ids = df[id_col].tolist()
-        selected_id = st.selectbox("Select Email ID", options=email_ids)
+        
+        # Use number input with up/down arrows to navigate by index
+        email_index = st.number_input(
+            "Select Email ID (use arrows to navigate)",
+            min_value=1,
+            max_value=len(email_ids),
+            value=1,
+            step=1,
+            key=f"email_index_{dataset_choice}"
+        )
+        selected_id = email_ids[email_index - 1]  # Subtract 1 for 0-based list indexing
+        st.caption(f"Email ID: {selected_id}")
 
         row = df[df[id_col] == selected_id]
         if row.empty:
@@ -89,17 +101,42 @@ try:
             st.subheader("Actions")
             col1, col2, col3 = st.columns([1, 1, 2])
             with col1:
-                st.button("Elaborate", key=f"btn_elaborate_{selected_id}")
+                elaborate_clicked = st.button("Elaborate", key=f"btn_elaborate_{selected_id}")
             with col2:
-                st.button("Shorten", key=f"btn_shorten_{selected_id}")
+                shorten_clicked = st.button("Shorten", key=f"btn_shorten_{selected_id}")
             with col3:
-                st.button("Change Tone", key=f"btn_change_tone_{selected_id}")
+                change_tone_clicked = st.button("Change Tone", key=f"btn_change_tone_{selected_id}")
                 tone_choice = st.selectbox(
                     "Tone",
                     options=["friendly", "sympathetic", "professional"],
                     index=0,
                     key=f"tone_select_{selected_id}",
                 )
+            
+            # Handle button clicks and display generated email
+            if content is not None:
+                generator = GenerateEmail(model="gpt-4.1")
+                
+                def generate_and_display(action: str, label: str, tone: str = None):
+                    """Helper to generate and display email result."""
+                    spinner_msg = f"Generating {label.lower()} version..."
+                    with st.spinner(spinner_msg):
+                        result = generator.generate(action, str(content), tone=tone)
+                        if result:
+                            st.divider()
+                            st.subheader(f"Generated Email ({label})")
+                            st.text_area("Result", value=result, height=250, key=f"result_{action}_{selected_id}_{tone or ''}")
+                        else:
+                            st.error("Failed to generate. Check API connection.")
+                
+                if elaborate_clicked:
+                    generate_and_display("lengthen", "Elaborate")
+                
+                if shorten_clicked:
+                    generate_and_display("shorten", "Shortened")
+                
+                if change_tone_clicked:
+                    generate_and_display("tone", f"{tone_choice.title()} Tone", tone=tone_choice)
                 
 
             with st.expander("Columns"):

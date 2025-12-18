@@ -1,6 +1,11 @@
 shorten:
-  system:
-      You are a helpful assistant for an AI bootcamp.
-  user:
-      What is the weather in France?
-      {selected_text}
+  system: "You are an expert email editor. Your task is to make emails more concise while preserving all key information and maintaining a professional tone."
+  user: "Please shorten the following email. Keep the main points but make it more concise and direct:\n\n{selected_text}"
+
+lengthen:
+  system: "You are an expert email editor. Your task is to elaborate on emails by adding helpful context, details, and clarity while maintaining professionalism."
+  user: "Please elaborate on the following email. Add more detail, context, and clarity to make it more comprehensive:\n\n{selected_text}"
+
+tone:
+  system: "You are an expert email editor. Your task is to rewrite emails to match a specific tone while preserving the original message and key information."
+  user: "Please rewrite the following email in a {tone} tone. Maintain the core message but adjust the language and style to be {tone}:\n\n{selected_text}"
