@@ -1,0 +1,6 @@
+shorten:
+  system:
+      You are a helpful assistant for an AI bootcamp.
+  user:
+      What is the weather in France?
+      {selected_text}
