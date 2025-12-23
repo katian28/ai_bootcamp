@@ -100,6 +100,7 @@ def generate_and_display(action: str, label: str, content: str,
     """
     spinner_msg = f"Generating {label.lower()} version..."
     generator = GenerateEmail(model=model)
+    judge_generator = GenerateEmail(model="gpt-4.1")  # Judges always use gpt-4.1
     
     with st.spinner(spinner_msg):
         result = generator.generate(action, str(content), tone=tone)
@@ -113,6 +114,22 @@ def generate_and_display(action: str, label: str, content: str,
                 key=f"result_{action}_{selected_id}_{tone or ''}",
                 disabled=False,  # Allow users to copy and edit results
             )
+
+            # Judge the model's response on multiple metrics
+            st.caption("Quality Ratings (Judge Models)")
+            cols = st.columns(3)
+            metrics = ["faithfulness", "completeness", "conciseness"]
+            for idx, metric in enumerate(metrics):
+                with cols[idx]:
+                    judge_result = judge_generator.judge(metric, str(content), result)
+                    if isinstance(judge_result, dict):
+                        rating = judge_result.get("rating", "?")
+                        explanation = judge_result.get("explanation", "")
+                        st.markdown(f"**{metric.title()}**: {rating}")
+                        st.caption(explanation)
+                    else:
+                        st.markdown(f"**{metric.title()}**")
+                        st.caption(judge_result if judge_result else "No result")
         else:
             st.error("Failed to generate. Check API connection and credentials.")
 

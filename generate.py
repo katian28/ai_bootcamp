@@ -129,6 +129,40 @@ class GenerateEmail:
         ]
         return self._call_api(messages)
 
+    def judge(self, metric: str, original_text: str, edited_text: str):
+        """Run a judge prompt for the given metric.
+
+        Args:
+            metric: One of 'faithfulness', 'completeness', 'conciseness'.
+            original_text: The original email text.
+            edited_text: The edited/model-generated email text.
+
+        Returns:
+            Parsed JSON dict if available, otherwise raw string response or None.
+        """
+        metric_map = {
+            "faithfulness": "faithfulness_judge",
+            "completeness": "completeness_judge",
+            "conciseness": "conciseness_judge",
+        }
+        prompt_name = metric_map.get(metric)
+        if not prompt_name:
+            raise ValueError(f"Unsupported metric: {metric}")
+
+        args = {"selected_text": original_text, "model_response": edited_text}
+        system_prompt = self.get_prompt(prompt_name, prompt_type="system", **args)
+        user_prompt = self.get_prompt(prompt_name, prompt_type="user", **args)
+        raw = self.send_prompt(user_prompt, system_prompt)
+
+        # Try to parse JSON per the expected format
+        if raw is None:
+            return None
+        try:
+            import json
+            return json.loads(raw)
+        except Exception:
+            return raw
+
     def generate(self, action: str, email_content: str, tone: str = None) -> str:
         """Generate email modifications based on the specified action.
         
